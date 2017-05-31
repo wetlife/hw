@@ -1,0 +1,7 @@
+# div-full-of-d3
+
+Initial feature-specifications:
+
+- take a vector of (geo)data
+
+- visualize data as a histogram, a scatter, and a parallel-something with d3
