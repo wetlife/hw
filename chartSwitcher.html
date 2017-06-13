@@ -131,12 +131,35 @@
             // ############## scatterplot ##################
             if (chartType === 'scatterplot') {
 								// generate random data
+                /*
 								const data = d3.range(50).map((d, i) => ({
 									x: Math.random(),
 									y: Math.random(),
 									id: i,
 									label: `Point ${i}`,
 								}));
+                */
+                
+                // define array literal for dataset
+                data = [
+                {x: 1, y: 1, i: 1},
+                {x: 2, y: 1, i: 2},
+                {x: 3, y: 2, i: 3},
+                {x: 4, y: 2, i: 4},
+                {x: 5, y: 3, i: 5},
+                {x: 1, y: 5, i: 6},
+                {x: 2, y: 8, i: 7},
+                {x: 3, y: 13, i: 8},
+                {x: 4, y: 21, i: 9},
+                {x: 5, y: 34, i: 10},
+                {x: 1, y: 55, i: 11},
+                {x: 2, y: 34, i: 12},
+                {x: 3, y: 34, i: 12},
+                {x: 4, y: 13, i: 14},
+                {x: 5, y: 8, i: 15},
+                {x: 1, y: 5, i: 16},
+                {x: 2, y: 3, i: 16}
+                ];
 
 								// ----------------------------------------------------
 								// Build a basic scatterplot
@@ -162,8 +185,8 @@
 								const pointRadius = 3;
 
 								// initialize scales
-								const xScale = d3.scaleLinear().domain([0, 1]).range([0, plotAreaWidth]);
-								const yScale = d3.scaleLinear().domain([0, 1]).range([plotAreaHeight, 0]);
+								const xScale = d3.scaleLinear().domain([0, 6]).range([0, plotAreaWidth]);
+								const yScale = d3.scaleLinear().domain([0, 60]).range([plotAreaHeight, 0]);
 								const colorScale = d3.scaleLinear().domain([0, 1]).range(['#06a', '#0bb']);
 
 								// select the root container where the chart will be added
