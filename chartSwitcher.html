@@ -41,6 +41,14 @@
         <script src="https://bl.ocks.org/syntagmatic/raw/3341641/render-queue.js"></script>
         <script src="./d3.v4.min.js"></script>
         <script>
+
+          /* assign data-literal to plot */
+          var width = 420;
+          var data = [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 600, 977, 1577, 2454, 4031, 6485];
+          var x = d3.scaleLinear()
+              .domain(d3.extent(data, function(d) { return d; }));
+          console.log({width, data, x});
+
           /* recreate deprecated d3 functionality lost b4 v4: d3.rebind */
           // Copies a variable number of methods from source to target.
           d3.rebind = function(target, source) {
@@ -59,7 +67,7 @@
             };
           }
 
-          d3.functor = function (v) {
+          d3.functor = function(v) {
             return typeof v === "function" ? v : function() { return v; };
           };
 
@@ -70,7 +78,8 @@
 
             // ############# histogram ###############
             if (chartType === 'histogram') {
-                var data = d3.range(1000).map(d3.randomBates(10));
+                /* create random distribution to plot */
+                var randomData = d3.range(1000).map(d3.randomBates(10));
 
                 var formatCount = d3.format(",.0f");
 
@@ -81,11 +90,12 @@
                     g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                 var x = d3.scaleLinear()
+                    .domain(d3.extent(data))
                     .rangeRound([0, width]);
 
                 var bins = d3.histogram()
                     .domain(x.domain())
-                    .thresholds(x.ticks(20))
+                    .thresholds(x.ticks(10))
                     (data);
 
                 var y = d3.scaleLinear()
