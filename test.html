@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Test Page for Features of D3</title>
+</head>
+<body>
+<div id="paragraphy">
+    <p>Brian</p>
+</div>
+<script src="d3.v4.min.js"></script>
+<script>
+var paragraphs = ['Alicia', 'Brian', 'Cassandra'];
+var update = d3.select('#paragraphy').selectAll('p')
+.data(paragraphs, function(d) {return d ? d : this.innerText;})
+  .style('color', 'green');
+var enter = update.enter().append('p')
+  .text(function(d) {return d;})
+  .style('color', 'orange');
+//update.exit().remove();
+
+</script>
+</body>
+</html>
