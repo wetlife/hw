@@ -4,344 +4,383 @@
         <meta charset="utf-8">
         <title>Example D3 Charts</title>
         <style>
-        .parallel-coordinates path {
-          fill: none;
-          stroke: red;
-        }
-        .bar {
-          fill: olive;
-        }
-        text {
-          fill: darkgrey;
-        }
-        .bar:hover {
-          fill: orange;
-        }
-        .axis--x path {
-          display: none;
-        }
+            .parallel-coordinates path {
+              fill: none;
+              stroke: red;
+            }
+            .bar {
+              fill: olive;
+            }
+            text {
+              fill: darkgrey;
+            }
+            .bar:hover {
+              fill: orange;
+            }
+            .axis--x path {
+              display: none;
+            }
         </style>
         <link rel="stylesheet" href="style.css"></link>
     </head>
     <body>
         <select onchange="chart(this.value)">
             <option value="Choose a visualization." selected disabled>Choose a chart.</option>
-            <option value="histogram">histogram</option>
+            <option value="bar">bar</option>
             <option value="scatterplot">scatterplot</option>
             <option value="parallel-coordinates">parallel-coordinates</option>
         </select>
         <div id="vis-container"></div>
-        <svg id="histogram" width="960" height="500"></svg>
         <script src="https://bl.ocks.org/syntagmatic/raw/3341641/render-queue.js"></script>
         <script src="./d3.v4.min.js"></script>
         <script>
 
-          /* assign data-literal to plot */
-          var width = 420;
-          var data = [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 600, 977, 1577, 2454, 4031, 6485];
-          var x = d3.scaleLinear()
-              .domain(d3.extent(data, function(d) { return d; }));
+            /* assign data-literal to plot */
+            var data = [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 600, 977, 1577, 2454, 4031, 6485];
+            var width = 420;
+            var x = d3.scaleLinear().domain(d3.extent(data, function(d) { return d; }));
 
-          /* recreate deprecated d3 functionality lost b4 v4: d3.rebind */
-          // Copies a variable number of methods from source to target.
-          d3.rebind = function(target, source) {
-            var i = 1, n = arguments.length, method;
-            while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
-            return target;
-          };
-
-          // Method is assumed to be a standard D3 getter-setter:
-          // If passed with no arguments, gets the value.
-          // If passed with arguments, sets the value and returns the target.
-          function d3_rebind(target, source, method) {
-            return function() {
-              var value = method.apply(source, arguments);
-              return value === source ? target : value;
+            /* recreate deprecated d3 functionality lost b4 v4: d3.rebind */
+            // Copies a variable number of methods from source to target.
+            d3.rebind = function(target, source) {
+                var i = 1, n = arguments.length, method;
+                while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
+                return target;
             };
-          }
 
-          d3.functor = function(v) {
-            return typeof v === "function" ? v : function() { return v; };
-          };
-
-        function chart(chartType) {
-            d3.select('#vis-container').selectAll('*').remove();//remove scatterplot
-            d3.select('#histogram').selectAll('*').remove();//remove histogram
-            d3.select('#histogram').style('display', 'none');
-            d3.select('.parallel-coordinates').remove();//remove parallel-coordinates
-
-            // ############# histogram ###############
-            if (chartType === 'histogram') {
-                /* create random distribution to plot */
-                //var randomData = d3.range(1000).map(d3.randomBates(10));
-
-                /* GIVE A LITERAL ARRAY OF DATA TO PLOT IN HISTOGRAM */
-                var data = [1, 1, 2, 3, 5, 8, 13, 21, 13, 8, 5, 3, 2, 1, 1];
-
-                var formatCount = d3.format(",.0f");
-
-                var svg = d3.select("svg"),
-                    margin = {top: 10, right: 30, bottom: 30, left: 30},
-                    width = +svg.attr("width") - margin.left - margin.right,
-                    height = +svg.attr("height") - margin.top - margin.bottom,
-                    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                console.log({data});
-                var x = d3.scaleLinear()
-                    .domain(d3.extent(data))
-                    .rangeRound([0, width]);
-
-                var bins = d3.histogram()
-                    .domain(x.domain())
-                    .thresholds(x.ticks(10))
-                    (data);
-
-                var y = d3.scaleLinear()
-                    .domain([0, d3.max(bins, function(d) { return d.length; })])
-                    .range([height, 0]);
-
-                var bar = g.selectAll(".bar")
-                  .data(bins)
-                  .enter().append("g")
-                    .attr("class", "bar")
-                    .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
-
-                d3.select('#histogram').style('display', 'block');
-
-                bar.append("rect")
-                    .attr("x", 1)
-                    .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-                    .attr("height", function(d) { return height - y(d.length); });
-
-                bar.append("text")
-                    .attr("dy", ".75em")
-                    .attr("y", 6)
-                    .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-                    .attr("text-anchor", "middle")
-                    .text(function(d) { return formatCount(d.length); });
-
-                g.append("g")
-                    .attr("class", "axis axis--x")
-                    .attr("transform", "translate(0," + height + ")")
-                    .call(d3.axisBottom(x));
+            // Method is assumed to be a standard D3 getter-setter:
+            // If passed with no arguments, gets the value.
+            // If passed with arguments, sets the value and returns the target.
+            function d3_rebind(target, source, method) {
+                return function() {
+                    var value = method.apply(source, arguments);
+                    return value === source ? target : value;
+                };
             }
 
-            // ############## scatterplot ##################
-            if (chartType === 'scatterplot') {
-								// generate random data
-                /*
-								const data = d3.range(50).map((d, i) => ({
-									x: Math.random(),
-									y: Math.random(),
-									id: i,
-									label: `Point ${i}`,
-								}));
-                */
-                
-                /* DEFINE ARRAY LITERAL FOR DATASET */
-                data = [
-                {x: 1, y: 1, i: 1},
-                {x: 2, y: 1, i: 2},
-                {x: 3, y: 2, i: 3},
-                {x: 4, y: 2, i: 4},
-                {x: 5, y: 3, i: 5},
-                {x: 1, y: 5, i: 6},
-                {x: 2, y: 8, i: 7},
-                {x: 3, y: 13, i: 8},
-                {x: 4, y: 21, i: 9},
-                {x: 5, y: 34, i: 10},
-                {x: 1, y: 55, i: 11},
-                {x: 2, y: 34, i: 12},
-                {x: 3, y: 34, i: 12},
-                {x: 4, y: 13, i: 14},
-                {x: 5, y: 8, i: 15},
-                {x: 1, y: 5, i: 16},
-                {x: 2, y: 3, i: 16}
-                ];
+            /* patch d3v3 functionality into d4 */
+            d3.functor = function(v) {
+                return typeof v === "function" ? v : function() { return v; };
+            };
 
-								// ----------------------------------------------------
-								// Build a basic scatterplot
-								// ----------------------------------------------------
+            function chart(chartType) {
+                d3.select('#vis-container').selectAll('*').remove();//remove scatterplot
+                d3.select('#histogram').selectAll('*').remove();//remove histogram
+                d3.select('#histogram').style('display', 'none');
+                d3.select('.parallel-coordinates').remove();//remove parallel-coordinates
 
-								// outer svg dimensions
-								const width = 600;
-								const height = 400;
+                // ############# bar ###############
+                if (chartType === 'bar') {
+                    var data = [1, 1, 2, 3, 5, 8, 13, 21, 13, 8, 5, 3, 2, 1, 1],
+                        margin = {top: '10', left: '20', bottom: '20', right: '20'},
+                        svg = d3.select('#vis-container')
+                          .append('svg')
+                          .attr('width', '500')
+                          .attr('height', '200')
+                          .style('border', '1px solid black'),
+                        width = svg.attr('width'),
+                        height = svg.attr('height'),
+                        barWidth = svg.attr('width')/data.length,
+                        barOffset = 1;
+                        y = d3.scaleLinear().domain([0, d3.max(data)]).range([0, height]);
+                    var barChart = svg.selectAll('rect')
+                      .data(data).enter()
+                        .append('rect')
+                            .style('fill', 'steelblue')
+                            .attr('width', barWidth - barOffset)
+                            .attr('height', function(d){ return y(+d); })
+                            .attr('x', function(d, i){ return i * +barWidth; })
+                            .attr('y', function(d){ return +height - y(+d); });
+                    var text = svg.selectAll('text')
+                      .data(data).enter()
+                        .append('text')
+                            .attr('x', function(d, i){ return i * +barWidth + 10; })
+                            .attr('y', function(d){ 
+                                var unclamped = +height - y(+d) + 15;
+                                if (unclamped <= 0){ return 15 }
+                                if (unclamped >= +height){ return height - 15 }
+                                return unclamped;
+                             })
+                            .text(function(d){ return String(d); })
+                            .style('stroke', 'black');
+                }
+                // ############# histogram ###############
+                if (chartType === 'histogram') {
+                    /* create random distribution to plot */
+                    //var randomData = d3.range(1000).map(d3.randomBates(10));
 
-								// padding around the chart where axes will go
-								const padding = {
-									top: 20,
-									right: 20,
-									bottom: 40,
-									left: 50,
-								};
+                    /* GIVE A LITERAL ARRAY OF DATA TO PLOT IN HISTOGRAM */
+                    var data = [0, 1.877979495436286, 2.152290136968455, 1.2288603448687418, 3.665166492111917, -0.7223158042283928, 6.328222225525304, 11.12663511156302, 3.7454679554936163, 20.750826956754736, 2.4688058572888627, 7.539015502534328, 11.54292136871382, 18.1762268881365, -13.367764192649805, 10.197118466829526, 22.607132019654628, 27.1997047577038, -4.556730165923371, 40.77320172002613, 29.94352857416591, -3.2357460740853705, 19.52602785323549, 17.01056673565965, 6.331649614057471, 27.7917217222616, 42.8212029746812, 44.232417933963546, -47.072929137915786, 2.750248306452906, 8.816098847349693, -4.558652360738902, -11.048649656566624, 27.79635949312744, -33.62151783120598, -18.18939272264713, 64.22705082148134, 12.348520927794318, 16.814360796556183, -10.677830995388913, 55.77503583350436, -51.92272233309601, 62.680336824456106, 60.21555676265643, 87.75852862186969, 98.30553470359149, 106.3966977033483, -7.370547440116163, 100.67030126902442, -8.241096558874057, 28.63268101488351, 31.339878584980763, 112.6594710745422, -16.138428432622256, 74.24574016393491, -32.83004380850874, -4.823060584330044, 79.82641904484312, 20.46266767421186, 26.43502233938104, 20.536239769439668, 18.809379771531933, -42.276319267436214, 9.166107060102036, -49.74251402284884, 1.8114919433422227, 64.04885379986573, 16.02456320586776, 24.564062738307374, 50.33443778955712, 67.30117263005802, 152.71948768073193, 133.07785145390972, -18.12820025809235, 3.1021991905945585, 122.51534729511282, 124.70808936327772, -38.26922861872615, -125.83626455814266, 37.525516890101166, 15.849639903514596, 205.88680583332572, -17.601294359566918, -68.71386721694479, -34.557543826655206, 71.09594516034026, -101.30865520463554, 204.20812776300153, 0.7860854467256635, 119.08516817697276, 207.97266416164035, -19.59443872450837, 161.8212760614392, 9.748579638860393, 18.34682477178019, -102.75809823501693, -40.20992445111689, 204.9294502508862, 63.891063188722626, 155.60953568150381]
 
-								// inner chart dimensions, where the dots are plotted
-								const plotAreaWidth = width - padding.left - padding.right;
-								const plotAreaHeight = height - padding.top - padding.bottom;
+                    var formatCount = d3.format(",.0f");
 
-								// radius of points in the scatterplot
-								const pointRadius = 3;
+                    var svg = d3.select("#vis-container").append("svg").attr('width', '960').attr("height", "700");
+                        margin = {top: 10, right: 30, bottom: 30, left: 30},
+                        width = +svg.attr("width") - margin.left - margin.right,
+                        height = +svg.attr("height") - margin.top - margin.bottom,
+                        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-								// initialize scales
-								const xScale = d3.scaleLinear().domain([0, 6]).range([0, plotAreaWidth]);
-								const yScale = d3.scaleLinear().domain([0, 60]).range([plotAreaHeight, 0]);
-								const colorScale = d3.scaleLinear().domain([0, 1]).range(['#06a', '#0bb']);
+                    var x = d3.scaleLinear()
+                        .domain(d3.extent(data))
+                        .rangeRound([0, width]);
 
-								// select the root container where the chart will be added
-								const container = d3.select('#vis-container');
+                    var bins = d3.histogram()
+                        .domain(x.domain())
+                        .thresholds(x.ticks(data.length))
+                        (data);
 
-								// initialize main SVG
-								const svg = container.append('svg')
-									.attr('width', width)
-									.attr('height', height);
+                    var y = d3.scaleLinear()
+                        .domain([0, d3.max(bins, function(d) { return d.length; })])
+                        .range([height, 0]);
 
-								// the main <g> where all the chart content goes inside
-								const g = svg.append('g')
-									.attr('transform', `translate(${padding.left} ${padding.top})`);
+                    var bar = g.selectAll(".bar")
+                      .data(bins)
+                      .enter().append("g")
+                        .attr("class", "bar")
+                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
 
-								// add in axis groups
-								const xAxisG = g.append('g').classed('x-axis', true)
-									.attr('transform', `translate(0 ${plotAreaHeight + pointRadius})`);
+                    var xAxis = d3.axisBottom()
 
-								// x-axis label
-								g.append('text')
-									.attr('transform', `translate(${plotAreaWidth / 2} ${plotAreaHeight + (padding.bottom)})`)
-									.attr('dy', -4) // adjust distance from the bottom edge
-									.attr('class', 'axis-label')
-									.attr('text-anchor', 'middle')
-									.text('X Axis');
+                    d3.select('#histogram').style('display', 'block');
 
-								const yAxisG = g.append('g').classed('y-axis', true)
-									.attr('transform', `translate(${-pointRadius} 0)`);
+                    bar.append("rect")
+                        .attr("x", 1)
+                        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+                        .attr("height", function(d) { return height - y(d.length); });
 
-								// y-axis label
-								g.append('text')
-									.attr('transform', `rotate(270) translate(${-plotAreaHeight / 2} ${-padding.left})`)
-									.attr('dy', 12) // adjust distance from the left edge
-									.attr('class', 'axis-label')
-									.attr('text-anchor', 'middle')
-									.text('Y Axis');
+                    bar.append("text")
+                        .attr("dy", ".75em")
+                        .attr("y", 6)
+                        .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
+                        .attr("text-anchor", "middle")
+                        .text(function(d) { return formatCount(d.length); });
 
-								// set up axis generating functions
-								const xTicks = Math.round(plotAreaWidth / 50);
-								const yTicks = Math.round(plotAreaHeight / 50);
+                    g.append("g")
+                        .attr("class", "axis axis--x")
+                        .attr("transform", "translate(0," + height + ")")
+                        .call(d3.axisBottom(x));
+                }
 
-								const xAxis = d3.axisBottom(xScale)
-									.ticks(xTicks)
-									.tickSizeOuter(0);
+                // ############## scatterplot ##################
+                if (chartType === 'scatterplot') {
+                    // generate random data
+                    /*
+                    const data = d3.range(50).map((d, i) => ({
+                      x: Math.random(),
+                      y: Math.random(),
+                      id: i,
+                      label: `Point ${i}`,
+                    }));
+                    */
+                    
+                    /* DEFINE ARRAY LITERAL FOR DATASET */
+                    data = [
+                    {x: 1, y: 1, i: 1},
+                    {x: 2, y: 1, i: 2},
+                    {x: 3, y: 2, i: 3},
+                    {x: 4, y: 2, i: 4},
+                    {x: 5, y: 3, i: 5},
+                    {x: 1, y: 5, i: 6},
+                    {x: 2, y: 8, i: 7},
+                    {x: 3, y: 13, i: 8},
+                    {x: 4, y: 21, i: 9},
+                    {x: 5, y: 34, i: 10},
+                    {x: 1, y: 55, i: 11},
+                    {x: 2, y: 34, i: 12},
+                    {x: 3, y: 34, i: 13},
+                    {x: 4, y: 13, i: 14},
+                    {x: 5, y: 8, i: 15},
+                    {x: 1, y: 5, i: 16},
+                    {x: 2, y: 3, i: 17}
+                    ];
 
-								const yAxis = d3.axisLeft(yScale)
-									.ticks(yTicks)
-									.tickSizeOuter(0);
+                    // ----------------------------------------------------
+                    // Build a basic scatterplot
+                    // ----------------------------------------------------
 
-								// draw the axes
-								yAxisG.call(yAxis);
-								xAxisG.call(xAxis);
+                    // outer svg dimensions
+                    const width = 600;
+                    const height = 400;
+
+                    // padding around the chart where axes will go
+                    const padding = {
+                      top: 20,
+                      right: 20,
+                      bottom: 40,
+                      left: 50,
+                    };
+
+                    // inner chart dimensions, where the dots are plotted
+                    const plotAreaWidth = width - padding.left - padding.right;
+                    const plotAreaHeight = height - padding.top - padding.bottom;
+
+                    // radius of points in the scatterplot
+                    const pointRadius = 3;
+
+                    // initialize scales
+                    const xScale = d3.scaleLinear().domain([0, 6]).range([0, plotAreaWidth]);
+                    const yScale = d3.scaleLinear().domain([0, 60]).range([plotAreaHeight, 0]);
+                    const colorScale = d3.scaleLinear().domain([0, 1]).range(['#06a', '#0bb']);
+
+                    // select the root container where the chart will be added
+                    const container = d3.select('#vis-container');
+
+                    // initialize main SVG
+                    const svg = container.append('svg')
+                      .attr('width', width)
+                      .attr('height', height);
+
+                    // the main <g> where all the chart content goes inside
+                    const g = svg.append('g')
+                      .attr('transform', `translate(${padding.left} ${padding.top})`);
+
+                    // add in axis groups
+                    const xAxisG = g.append('g').classed('x-axis', true)
+                      .attr('transform', `translate(0 ${plotAreaHeight + pointRadius})`);
+
+                    // x-axis label
+                    g.append('text')
+                      .attr('transform', `translate(${plotAreaWidth / 2} ${plotAreaHeight + (padding.bottom)})`)
+                      .attr('dy', -4) // adjust distance from the bottom edge
+                      .attr('class', 'axis-label')
+                      .attr('text-anchor', 'middle')
+                      .text('X Axis');
+
+                    const yAxisG = g.append('g').classed('y-axis', true)
+                      .attr('transform', `translate(${-pointRadius} 0)`);
+
+                    // y-axis label
+                    g.append('text')
+                      .attr('transform', `rotate(270) translate(${-plotAreaHeight / 2} ${-padding.left})`)
+                      .attr('dy', 12) // adjust distance from the left edge
+                      .attr('class', 'axis-label')
+                      .attr('text-anchor', 'middle')
+                      .text('Y Axis');
+
+                    // set up axis generating functions
+                    const xTicks = Math.round(plotAreaWidth / 50);
+                    const yTicks = Math.round(plotAreaHeight / 50);
+
+                    const xAxis = d3.axisBottom(xScale)
+                      .ticks(xTicks)
+                      .tickSizeOuter(0);
+
+                    const yAxis = d3.axisLeft(yScale)
+                      .ticks(yTicks)
+                      .tickSizeOuter(0);
+
+                    // draw the axes
+                    yAxisG.call(yAxis);
+                    xAxisG.call(xAxis);
 
 
-								// add in circles
-								const circles = g.append('g').attr('class', 'circles');
-								const binding = circles.selectAll('.data-point').data(data, d => d.id);
-								binding.enter().append('circle')
-									.classed('data-point', true)
-									.attr('r', pointRadius)
-									.attr('cx', d => xScale(d.x))
-									.attr('cy', d => yScale(d.y))
-									.attr('fill', d => colorScale(d.y));
+                    // add in circles
+                    const circles = g.append('g').attr('class', 'circles');
+                    const binding = circles.selectAll('.data-point').data(data, d => d.id);
+                    binding.enter().append('circle')
+                      .classed('data-point', true)
+                      .attr('r', pointRadius)
+                      .attr('cx', d => xScale(d.x))
+                      .attr('cy', d => yScale(d.y))
+                      .attr('fill', d => colorScale(d.y));
+                }
+
+                // ############# parallel-coordinates ###############
+                if (chartType === 'parallel-coordinates') {
+                    var data = 'name,economy (mpg),cylinders,displacement (cc),power (hp),weight (lb),0-60 mph (s),year\nAMC Ambassador Brougham,13,8,360,175,3821,11,73\nAMC Ambassador DPL,15,8,390,190,3850,8.5,70\nAMC Ambassador SST,17,8,304,150,3672,11.5,72';
+
+                    var margin = {top: 30, right: 10, bottom: 10, left: 10},
+                        width = 960 - margin.left - margin.right,
+                        height = 500 - margin.top - margin.bottom;
+
+                    var x = d3.scalePoint().range([0, width]).padding(1),
+                        y = {};
+
+                    var line = d3.line(),
+                        axis = d3.axisLeft(),
+                        background,
+                        foreground;
+
+                    var svg = d3.select("body").append("svg")
+                        .attr("class", "parallel-coordinates")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                      .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                    var cars = d3.csvParse(data);
+
+                    (function(cars) {
+
+                      // Extract the list of dimensions and create a scale for each.
+                      x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
+                        return d != "name" && (y[d] = d3.scaleLinear()
+                            .domain(d3.extent(cars, function(p) { return +p[d]; }))
+                            .range([height, 0]));
+                      }));
+
+                      // Add grey background lines for context.
+                      background = svg.append("g")
+                          .attr("class", "background")
+                        .selectAll("path")
+                          .data(cars)
+                        .enter().append("path")
+                          .attr("d", path);
+
+                      // Add blue foreground lines for focus.
+                      foreground = svg.append("g")
+                          .attr("class", "foreground")
+                        .selectAll("path")
+                          .data(cars)
+                        .enter().append("path")
+                          .attr("d", path);
+
+                      // Add a group element for each dimension.
+                      var g = svg.selectAll(".dimension")
+                          .data(dimensions)
+                        .enter().append("g")
+                          .attr("class", "dimension")
+                          .attr("transform", function(d) { return "translate(" + x(d) + ")"; });
+
+                      // Add an axis and title.
+                      g.append("g")
+                          .attr("class", "axis")
+                          .each(function(d) { d3.select(this).call(axis.scale(y[d])); })
+                        .append("text")
+                          .style("text-anchor", "middle")
+                          .attr("y", -9)
+                          .text(function(d) { return d; });
+
+                      // Add and store a brush for each axis.
+                      /*
+                      g.append("g")
+                          .attr("class", "brush")
+                          .each(function(d) {console.log({foo:[[0, -y[d].range()[0]], [20, y[d].range()[1]]]}); d3.select(this).call(y[d].brush = d3.brushY().extent([[0, -y[d].range()[0]], [20, y[d].range()[1]]]).on("brush", brush)); })//y(y[d]).on("brush", brush)); })
+                        .selectAll("rect")
+                          .attr("x", -8)
+                          .attr("width", 16);
+                    */
+                    })(cars);
+
+                    // Returns the path for a given data point.
+                    function path(d) {
+                      return line(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
+                    }
+
+                    // Handles a brush event, toggling the display of foreground lines.
+                    /*
+                    function brush() {
+                      var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
+                          extents = actives.map(function(p) { return y[p].brush.extent(); });
+                      foreground.style("display", function(d) {
+                        return actives.every(function(p, i) {
+                          return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+                        }) ? null : "none";
+                      });
+                    }
+                    */
+                }
             }
-
-          // ############# parallel-coordinates ###############
-          if (chartType === 'parallel-coordinates') {
-              var data = 'name,economy (mpg),cylinders,displacement (cc),power (hp),weight (lb),0-60 mph (s),year\nAMC Ambassador Brougham,13,8,360,175,3821,11,73\nAMC Ambassador DPL,15,8,390,190,3850,8.5,70\nAMC Ambassador SST,17,8,304,150,3672,11.5,72';
-
-              var margin = {top: 30, right: 10, bottom: 10, left: 10},
-                  width = 960 - margin.left - margin.right,
-                  height = 500 - margin.top - margin.bottom;
-
-              var x = d3.scalePoint().range([0, width]).padding(1),
-                  y = {};
-
-              var line = d3.line(),
-                  axis = d3.axisLeft(),
-                  background,
-                  foreground;
-
-              var svg = d3.select("body").append("svg")
-                  .attr("class", "parallel-coordinates")
-                  .attr("width", width + margin.left + margin.right)
-                  .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-              var cars = d3.csvParse(data);
-
-              (function(cars) {
-
-                // Extract the list of dimensions and create a scale for each.
-                x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
-                  return d != "name" && (y[d] = d3.scaleLinear()
-                      .domain(d3.extent(cars, function(p) { return +p[d]; }))
-                      .range([height, 0]));
-                }));
-
-                // Add grey background lines for context.
-                background = svg.append("g")
-                    .attr("class", "background")
-                  .selectAll("path")
-                    .data(cars)
-                  .enter().append("path")
-                    .attr("d", path);
-
-                // Add blue foreground lines for focus.
-                foreground = svg.append("g")
-                    .attr("class", "foreground")
-                  .selectAll("path")
-                    .data(cars)
-                  .enter().append("path")
-                    .attr("d", path);
-
-                // Add a group element for each dimension.
-                var g = svg.selectAll(".dimension")
-                    .data(dimensions)
-                  .enter().append("g")
-                    .attr("class", "dimension")
-                    .attr("transform", function(d) { return "translate(" + x(d) + ")"; });
-
-                // Add an axis and title.
-                g.append("g")
-                    .attr("class", "axis")
-                    .each(function(d) { d3.select(this).call(axis.scale(y[d])); })
-                  .append("text")
-                    .style("text-anchor", "middle")
-                    .attr("y", -9)
-                    .text(function(d) { return d; });
-
-                // Add and store a brush for each axis.
-                g.append("g")
-                    .attr("class", "brush")
-                    .each(function(d) { d3.select(this).call(y[d].brush = d3.brushY().extent([[0, y[d].range()[0]], [20, y[d].range()[1]]]).on("brush", brush)); })//y(y[d]).on("brush", brush)); })
-                  .selectAll("rect")
-                    .attr("x", -8)
-                    .attr("width", 16);
-              })(cars);
-
-              // Returns the path for a given data point.
-              function path(d) {
-                return line(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
-              }
-
-              // Handles a brush event, toggling the display of foreground lines.
-              function brush() {
-                var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
-                    extents = actives.map(function(p) { return y[p].brush.extent(); });
-                foreground.style("display", function(d) {
-                  return actives.every(function(p, i) {
-                    return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-                  }) ? null : "none";
-                });
-              }
-          }
-        }
         </script>
     </body>
 </html>
