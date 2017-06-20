@@ -6,19 +6,45 @@
         <style>
             .parallel-coordinates path {
               fill: none;
-              stroke: red;
-            }
-            .bar {
-              fill: olive;
             }
             text {
-              fill: darkgrey;
+                fill: lightgrey;
             }
-            .bar:hover {
-              fill: orange;
+            body {
+                font: 12px Arial;
             }
-            .axis--x path {
-              display: none;
+
+            path { 
+                stroke: steelblue;
+                stroke-width: 2;
+                fill: none;
+            }
+
+            .axis line, .axis path {
+                fill: none;
+                stroke: #222;
+                stroke-width: 1px;
+            }
+
+            .axis path,
+            .axis line {
+                fill: none;
+                stroke: grey;
+                stroke-width: 1;
+                shape-rendering: crispEdges;
+            }
+
+            div.tooltip {	
+                position: absolute;			
+                text-align: center;			
+                width: 60px;					
+                height: 28px;					
+                padding: 2px;				
+                font: 12px sans-serif;		
+                background: lightsteelblue;	
+                border: 0px;		
+                border-radius: 8px;			
+                pointer-events: none;			
             }
         </style>
         <link rel="stylesheet" href="style.css"></link>
@@ -35,10 +61,7 @@
         <script src="./d3.v4.min.js"></script>
         <script>
 
-            /* assign data-literal to plot */
-            var data = [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 600, 977, 1577, 2454, 4031, 6485];
             var width = 420;
-            var x = d3.scaleLinear().domain(d3.extent(data, function(d) { return d; }));
 
             /* recreate deprecated d3 functionality lost b4 v4: d3.rebind */
             // Copies a variable number of methods from source to target.
@@ -86,7 +109,7 @@
                     var barChart = svg.selectAll('rect')
                       .data(data).enter()
                         .append('rect')
-                            .style('fill', 'steelblue')
+                            .style('fill', 'lightblue')
                             .attr('width', barWidth - barOffset)
                             .attr('height', function(d){ return y(+d); })
                             .attr('x', function(d, i){ return i * +barWidth; })
@@ -104,13 +127,14 @@
                             .text(function(d){ return String(d); })
                             .style('stroke', 'black');
                 }
+
                 // ############# histogram ###############
                 if (chartType === 'histogram') {
                     /* create random distribution to plot */
                     //var randomData = d3.range(1000).map(d3.randomBates(10));
 
                     /* GIVE A LITERAL ARRAY OF DATA TO PLOT IN HISTOGRAM */
-                    var data = [0, 1.877979495436286, 2.152290136968455, 1.2288603448687418, 3.665166492111917, -0.7223158042283928, 6.328222225525304, 11.12663511156302, 3.7454679554936163, 20.750826956754736, 2.4688058572888627, 7.539015502534328, 11.54292136871382, 18.1762268881365, -13.367764192649805, 10.197118466829526, 22.607132019654628, 27.1997047577038, -4.556730165923371, 40.77320172002613, 29.94352857416591, -3.2357460740853705, 19.52602785323549, 17.01056673565965, 6.331649614057471, 27.7917217222616, 42.8212029746812, 44.232417933963546, -47.072929137915786, 2.750248306452906, 8.816098847349693, -4.558652360738902, -11.048649656566624, 27.79635949312744, -33.62151783120598, -18.18939272264713, 64.22705082148134, 12.348520927794318, 16.814360796556183, -10.677830995388913, 55.77503583350436, -51.92272233309601, 62.680336824456106, 60.21555676265643, 87.75852862186969, 98.30553470359149, 106.3966977033483, -7.370547440116163, 100.67030126902442, -8.241096558874057, 28.63268101488351, 31.339878584980763, 112.6594710745422, -16.138428432622256, 74.24574016393491, -32.83004380850874, -4.823060584330044, 79.82641904484312, 20.46266767421186, 26.43502233938104, 20.536239769439668, 18.809379771531933, -42.276319267436214, 9.166107060102036, -49.74251402284884, 1.8114919433422227, 64.04885379986573, 16.02456320586776, 24.564062738307374, 50.33443778955712, 67.30117263005802, 152.71948768073193, 133.07785145390972, -18.12820025809235, 3.1021991905945585, 122.51534729511282, 124.70808936327772, -38.26922861872615, -125.83626455814266, 37.525516890101166, 15.849639903514596, 205.88680583332572, -17.601294359566918, -68.71386721694479, -34.557543826655206, 71.09594516034026, -101.30865520463554, 204.20812776300153, 0.7860854467256635, 119.08516817697276, 207.97266416164035, -19.59443872450837, 161.8212760614392, 9.748579638860393, 18.34682477178019, -102.75809823501693, -40.20992445111689, 204.9294502508862, 63.891063188722626, 155.60953568150381]
+                    var data = [0, 1.87, 2.15, 1.22, 3.66, -0.72, 6.32, 11.12, 3.74, 20.75, 2.46, 7.53, 11.54, 18.17, -13.36, 10.19, 22.60, 27.19, -4.55, 40.77, 29.94, -3.23, 19.52, 17.01, 6.33, 27.79, 42.82, 44.23, -47.07, 2.75, 8.81, -4.55, -11.04, 27.79, -33.62, -18.18, 64.22, 12.34, 16.81, -10.67, 55.77, -51.92, 62.68, 60.21, 87.75, 98.30, 106.39, -7.37, 100.67, -8.24, 28.63, 31.33, 112.65, -16.13, 74.24, -32.83, -4.82, 79.82, 20.46, 26.43, 20.53, 18.80, -42.27, 9.16, -49.74, 1.81, 64.04, 16.02, 24.56, 50.33, 67.30, 152.71, 133.07, -18.12, 3.10, 122.51, 124.70, -38.26, -125.83, 37.52, 15.84, 205.88, -17.60, -68.71, -34.55, 71.09, -101.30, 204.20, 0.78, 119.08, 207.97, -19.59, 161.82, 9.74, 18.34, -102.75, -40.20, 204.92, 63.89, 155.60]
 
                     var formatCount = d3.format(",.0f");
 
@@ -172,26 +196,42 @@
                       label: `Point ${i}`,
                     }));
                     */
-                    
-                    /* DEFINE ARRAY LITERAL FOR DATASET */
+
+                    /* ARRAY LITERAL FOR DATASET YIELDED BY FOLLOWING CODE:
+                       d3.range(30).map(function(d){return {x: d, y: +d * (1 + 0.25 * (d3.randomNormal()()-.5))}})
+                       FOLLOWED BY AN INTERACTIVE FIND-AND-REPLACE IN VIM:
+                       %s/\([0-9]\{2}\)[0-9]\{2}[0-9]\+\>/\1/gc */
                     data = [
-                    {x: 1, y: 1, i: 1},
-                    {x: 2, y: 1, i: 2},
-                    {x: 3, y: 2, i: 3},
-                    {x: 4, y: 2, i: 4},
-                    {x: 5, y: 3, i: 5},
-                    {x: 1, y: 5, i: 6},
-                    {x: 2, y: 8, i: 7},
-                    {x: 3, y: 13, i: 8},
-                    {x: 4, y: 21, i: 9},
-                    {x: 5, y: 34, i: 10},
-                    {x: 1, y: 55, i: 11},
-                    {x: 2, y: 34, i: 12},
-                    {x: 3, y: 34, i: 13},
-                    {x: 4, y: 13, i: 14},
-                    {x: 5, y: 8, i: 15},
-                    {x: 1, y: 5, i: 16},
-                    {x: 2, y: 3, i: 17}
+                      { x: 0, y: 0 },
+                      { x: 1, y: 1.06 },
+                      { x: 2, y: 2.21 },
+                      { x: 3, y: 1.45 },
+                      { x: 4, y: 3.79 },
+                      { x: 5, y: 5.28 },
+                      { x: 6, y: 7.84 },
+                      { x: 7, y: 8.33 },
+                      { x: 8, y: 10.02 },
+                      { x: 9, y: 6.75 },
+                      { x: 10, y: 8.53 },
+                      { x: 11, y: 7.92 },
+                      { x: 12, y: 11.69 },
+                      { x: 13, y: 7.58 },
+                      { x: 14, y: 4.59 },
+                      { x: 15, y: 13.10 },
+                      { x: 16, y: 8.20 },
+                      { x: 17, y: 17.89 },
+                      { x: 18, y: 18.24 },
+                      { x: 19, y: 15.99 },
+                      { x: 20, y: 14.22 },
+                      { x: 21, y: 28.86 },
+                      { x: 22, y: 9.90 },
+                      { x: 23, y: 11.56 },
+                      { x: 24, y: 13.32 },
+                      { x: 25, y: 24.28 },
+                      { x: 26, y: 8.04 },
+                      { x: 27, y: 31.83 },
+                      { x: 28, y: 29.69 },
+                      { x: 29, y: 18.42 }
                     ];
 
                     // ----------------------------------------------------
@@ -218,8 +258,8 @@
                     const pointRadius = 3;
 
                     // initialize scales
-                    const xScale = d3.scaleLinear().domain([0, 6]).range([0, plotAreaWidth]);
-                    const yScale = d3.scaleLinear().domain([0, 60]).range([plotAreaHeight, 0]);
+                    const xScale = d3.scaleLinear().domain(d3.extent(data, function(d){return d['x'];})).range([0, plotAreaWidth]);
+                    const yScale = d3.scaleLinear().domain(d3.extent(data, function(d){return d['y'];})).range([plotAreaHeight, 0]);
                     const colorScale = d3.scaleLinear().domain([0, 1]).range(['#06a', '#0bb']);
 
                     // select the root container where the chart will be added
@@ -273,20 +313,39 @@
                     yAxisG.call(yAxis);
                     xAxisG.call(xAxis);
 
+                    // Define the div for the tooltip
+                    var div = d3.select("body").append("div")	
+                        .attr("class", "tooltip")				
+                        .style("opacity", 0);
 
                     // add in circles
                     const circles = g.append('g').attr('class', 'circles');
                     const binding = circles.selectAll('.data-point').data(data, d => d.id);
                     binding.enter().append('circle')
-                      .classed('data-point', true)
-                      .attr('r', pointRadius)
-                      .attr('cx', d => xScale(d.x))
-                      .attr('cy', d => yScale(d.y))
-                      .attr('fill', d => colorScale(d.y));
+                        .classed('data-point', true)
+                        .attr('r', pointRadius)
+                        .attr('cx', d => xScale(d.x))
+                        .attr('cy', d => yScale(d.y))
+                        .attr('fill', d => colorScale(d.y))
+                        .on("mouseover", function(d) {		
+                            div.transition()		
+                                .duration(100)		
+                                .style("opacity", .9);		
+                            div	.html(d.x + "<br/>"  + d.y)	
+                                .style("left", (d3.event.pageX) + "px")		
+                                .style("top", (d3.event.pageY - 28) + "px");	
+                            })					
+                        .on("mouseout", function(d) {		
+                            div.transition()		
+                                .duration(200)		
+                                .style("opacity", 0);
+                        });
                 }
 
                 // ############# parallel-coordinates ###############
                 if (chartType === 'parallel-coordinates') {
+
+                    /* DATASET FOR PLOTTING */
                     var data = 'name,economy (mpg),cylinders,displacement (cc),power (hp),weight (lb),0-60 mph (s),year\nAMC Ambassador Brougham,13,8,360,175,3821,11,73\nAMC Ambassador DPL,15,8,390,190,3850,8.5,70\nAMC Ambassador SST,17,8,304,150,3672,11.5,72';
 
                     var margin = {top: 30, right: 10, bottom: 10, left: 10},
@@ -360,25 +419,14 @@
                           .attr("x", -8)
                           .attr("width", 16);
                     */
-                    })(cars);
+                    })(cars);// pass cars as the closure's parameter
+
 
                     // Returns the path for a given data point.
                     function path(d) {
+                      console.log('path called with d =',d,'\n returning',dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
                       return line(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
                     }
-
-                    // Handles a brush event, toggling the display of foreground lines.
-                    /*
-                    function brush() {
-                      var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
-                          extents = actives.map(function(p) { return y[p].brush.extent(); });
-                      foreground.style("display", function(d) {
-                        return actives.every(function(p, i) {
-                          return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-                        }) ? null : "none";
-                      });
-                    }
-                    */
                 }
             }
         </script>
