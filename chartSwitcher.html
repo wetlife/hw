@@ -82,6 +82,7 @@
         <div id="vis-container"></div>
         <script src="https://bl.ocks.org/syntagmatic/raw/3341641/render-queue.js"></script>
         <script src="./d3.v4.min.js"></script>
+        <script src="render-queue.js"></script>
         <script>
 
             var width = 420;
@@ -111,8 +112,8 @@
 
             function chart(chartType) {
                 d3.select('#vis-container').selectAll('*').remove();//remove scatterplot
-                d3.select('#histogram').selectAll('*').remove();//remove histogram
-                d3.select('#histogram').style('display', 'none');
+                d3.select('#bar').selectAll('*').remove();//remove histogram
+                d3.select('#bar').style('display', 'none');
                 d3.select('.parallel-coordinates').remove();//remove parallel-coordinates
 
                 // ############# bar ###############
@@ -124,93 +125,61 @@
                           .attr('width', '500')
                           .attr('height', '200')
                           .style('border', '1px solid black'),
-                        width = svg.attr('width'),
-                        height = svg.attr('height'),
-                        barWidth = svg.attr('width')/data.length,
+                        width = +svg.attr('width') - margin.left - margin.right,
+                        height = +svg.attr('height') - margin.top - margin.bottom,
+                        barWidth = width/data.length,
                         barOffset = 1;
                         y = d3.scaleLinear().domain([0, d3.max(data)]).range([0, height]);
-                    var barChart = svg.selectAll('rect')
+                    var barChart = svg.append('g')
+                        .attr('id','barchart')
+                        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+                    var bars = barChart.selectAll('rect')
                       .data(data).enter()
                         .append('rect')
-                            .style('fill', 'lightblue')
+                            .style('fill', 'steelblue')
                             .attr('width', barWidth - barOffset)
                             .attr('height', function(d){ return y(+d); })
-                            .attr('x', function(d, i){ return i * +barWidth; })
+                            .attr('x', function(d, i){ return i * barWidth; })
                             .attr('y', function(d){ return +height - y(+d); });
-                    var text = svg.selectAll('text')
+                    var text = barChart.selectAll('text')
                       .data(data).enter()
                         .append('text')
-                            .attr('x', function(d, i){ return i * +barWidth + 10; })
-                            .attr('y', function(d){ 
-                                var unclamped = +height - y(+d) + 15;
-                                if (unclamped <= 0){ return 15 }
-                                if (unclamped >= +height){ return height - 15 }
+                            .attr('x', function(d, i){ return (i * barWidth + .25 * barWidth); })
+                            .attr('y', function(d, i){ 
+                              var foo = i * barWidth + margin.left;console.log({d, i, foo});
+                                var unclamped = 12 + height - y(+d);
+                                if (unclamped <= 0){ return 2 }
+                                if (unclamped >= +height){ return height - 12 }
                                 return unclamped;
                              })
-                            .text(function(d){ return String(d); })
-                            .style('stroke', 'black');
-                }
-
-                // ############# histogram ###############
-                if (chartType === 'histogram') {
-                    /* create random distribution to plot */
-                    //var randomData = d3.range(1000).map(d3.randomBates(10));
-
-                    /* GIVE A LITERAL ARRAY OF DATA TO PLOT IN HISTOGRAM */
-                    var data = [0, 1.87, 2.15, 1.22, 3.66, -0.72, 6.32, 11.12, 3.74, 20.75, 2.46, 7.53, 11.54, 18.17, -13.36, 10.19, 22.60, 27.19, -4.55, 40.77, 29.94, -3.23, 19.52, 17.01, 6.33, 27.79, 42.82, 44.23, -47.07, 2.75, 8.81, -4.55, -11.04, 27.79, -33.62, -18.18, 64.22, 12.34, 16.81, -10.67, 55.77, -51.92, 62.68, 60.21, 87.75, 98.30, 106.39, -7.37, 100.67, -8.24, 28.63, 31.33, 112.65, -16.13, 74.24, -32.83, -4.82, 79.82, 20.46, 26.43, 20.53, 18.80, -42.27, 9.16, -49.74, 1.81, 64.04, 16.02, 24.56, 50.33, 67.30, 152.71, 133.07, -18.12, 3.10, 122.51, 124.70, -38.26, -125.83, 37.52, 15.84, 205.88, -17.60, -68.71, -34.55, 71.09, -101.30, 204.20, 0.78, 119.08, 207.97, -19.59, 161.82, 9.74, 18.34, -102.75, -40.20, 204.92, 63.89, 155.60]
-
-                    var formatCount = d3.format(",.0f");
-
-                    var svg = d3.select("#vis-container").append("svg").attr('width', '960').attr("height", "700");
-                        margin = {top: 10, right: 30, bottom: 30, left: 30},
-                        width = +svg.attr("width") - margin.left - margin.right,
-                        height = +svg.attr("height") - margin.top - margin.bottom,
-                        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                    var x = d3.scaleLinear()
-                        .domain(d3.extent(data))
-                        .rangeRound([0, width]);
-
-                    var bins = d3.histogram()
-                        .domain(x.domain())
-                        .thresholds(x.ticks(data.length))
-                        (data);
-
-                    var y = d3.scaleLinear()
-                        .domain([0, d3.max(bins, function(d) { return d.length; })])
+                            .style('fill', 'orange')
+                            .text(function(d){ return String(d); });
+                    var xScale = d3.scaleLinear()
+                        .domain([1, data.length])
+                        .range([0, width - barWidth - barOffset]);
+                    var xAxisGenerator = d3.axisBottom(xScale).ticks(data.length);
+                    var xAxisPadding = {"left": 1.1 * (barWidth + barOffset), "top": +height + Number(margin.top)};
+                    var xAxis = d3.select('svg').append('g')
+                        .attr('transform', 'translate(' + xAxisPadding.left + ',' + xAxisPadding.top + ')')
+                        .classed('x-axis', true)
+                        .call(xAxisGenerator)
+                        .attr('stroke', 'grey');
+                    var yScale = d3.scaleLinear()
+                        .domain([0, d3.max(data)])
                         .range([height, 0]);
-
-                    var bar = g.selectAll(".bar")
-                      .data(bins)
-                      .enter().append("g")
-                        .attr("class", "bar")
-                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
-
-                    var xAxis = d3.axisBottom()
-
-                    d3.select('#histogram').style('display', 'block');
-
-                    bar.append("rect")
-                        .attr("x", 1)
-                        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-                        .attr("height", function(d) { return height - y(d.length); });
-
-                    bar.append("text")
-                        .attr("dy", ".75em")
-                        .attr("y", 6)
-                        .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-                        .attr("text-anchor", "middle")
-                        .text(function(d) { return formatCount(d.length); });
-
-                    g.append("g")
-                        .attr("class", "axis axis--x")
-                        .attr("transform", "translate(0," + height + ")")
-                        .call(d3.axisBottom(x));
+                    var yAxisGenerator = d3.axisLeft(yScale);
+                    var yAxisPadding = {"left": margin.left, "top": margin.top};
+                    console.log(yAxisPadding);
+                    var yAxis = d3.select('svg').append('g')
+                        .attr('transform', 'translate(' + yAxisPadding.left + ',' + yAxisPadding.top + ')')
+                        .classed('y-axis', true)
+                        .call(yAxisGenerator)
+                        .attr('stroke', 'grey');
                 }
 
                 // ############## scatterplot ##################
                 if (chartType === 'scatterplot') {
-                    // generate random data
+                    // generate random data by uncommenting below
                     /*
                     const data = d3.range(50).map((d, i) => ({
                       x: Math.random(),
@@ -220,7 +189,7 @@
                     }));
                     */
 
-                    /* ARRAY LITERAL FOR DATASET YIELDED BY FOLLOWING CODE:
+                    /* LITERAL ARRAY FOR DATASET PRODUCED BY THE FOLLOWING CODE:
                        d3.range(30).map(function(d){return {x: d, y: +d * (1 + 0.25 * (d3.randomNormal()()-.5))}})
                        FOLLOWED BY AN INTERACTIVE FIND-AND-REPLACE IN VIM:
                        %s/\([0-9]\{2}\)[0-9]\{2}[0-9]\+\>/\1/gc */
@@ -367,114 +336,337 @@
 
                 // ############# parallel-coordinates ###############
                 if (chartType === 'parallel-coordinates') {
-                    var margin = {top: 30, right: 10, bottom: 10, left: 10},
-                        width = 960 - margin.left - margin.right,
-                        height = 500 - margin.top - margin.bottom;
+                  var margin = {top: 66, right: 110, bottom: 20, left: 188},
+                      width = document.body.clientWidth - margin.left - margin.right,
+                      height = 340 - margin.top - margin.bottom,
+                      innerHeight = height - 2;
 
-                    var x = d3.scalePoint().range([0, width]),
-                        y = {},
-                        dragging = {};
+                  var devicePixelRatio = window.devicePixelRatio || 1;
 
-                    var line = d3.line(),
-                        axis = d3.axisLeft(),
-                        background,
-                        foreground;
+                  var color = d3.scaleOrdinal()
+                    .range(["#5DA5B3","#D58323","#DD6CA7","#54AF52","#8C92E8","#E15E5A","#725D82","#776327","#50AB84","#954D56","#AB9C27","#517C3F","#9D5130","#357468","#5E9ACF","#C47DCB","#7D9E33","#DB7F85","#BA89AD","#4C6C86","#B59248","#D8597D","#944F7E","#D67D4B","#8F86C2"]);
 
-                    var svg = d3.select("body").append("svg")
-                        .attr("width", width + margin.left + margin.right)
-                        .attr("height", height + margin.top + margin.bottom)
-                      .append("g")
-                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                  var types = {
+                    "Number": {
+                      key: "Number",
+                      coerce: function(d) { return +d; },
+                      extent: d3.extent,
+                      within: function(d, extent, dim) { return extent[0] <= dim.scale(d) && dim.scale(d) <= extent[1]; },
+                      defaultScale: d3.scaleLinear().range([innerHeight, 0])
+                    },
+                    "String": {
+                      key: "String",
+                      coerce: String,
+                      extent: function (data) { return data.sort(); },
+                      within: function(d, extent, dim) { return extent[0] <= dim.scale(d) && dim.scale(d) <= extent[1]; },
+                      defaultScale: d3.scalePoint().range([0, innerHeight])
+                    },
+                    "Date": {
+                      key: "Date",
+                      coerce: function(d) { return new Date(d); },
+                      extent: d3.extent,
+                      within: function(d, extent, dim) { return extent[0] <= dim.scale(d) && dim.scale(d) <= extent[1]; },
+                      defaultScale: d3.scaleTime().range([0, innerHeight])
+                    }
+                  };
 
-                    var data = 'name,economy (mpg),cylinders,displacement (cc),power (hp),weight (lb),0-60 mph (s),year\nAMC Ambassador Brougham,13,8,360,175,3821,11,73\nAMC Ambassador DPL,15,8,390,190,3850,8.5,70\nAMC Ambassador SST,17,8,304,150,3672,11.5,72';
-                    d3.csv(data, function(error, cars) {
+                  var dimensions = [
+                    {
+                      key: "food_group",
+                      description: "Food Group",
+                      type: types["String"],
+                      axis: d3.axisLeft()
+                        .tickFormat(function(d,i) {
+                          return d;
+                        })
+                    },
+                    {
+                      key: "Total lipid (fat) (g)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Sugars, total (g)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Calcium, Ca (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Sodium, Na (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Phosphorus, P (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Potassium, K (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Thiamin (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Riboflavin (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Niacin (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Iron, Fe (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Magnesium, Mg (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Protein (g)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Zinc, Zn (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin B-6 (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin B-12 (mcg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Folic acid (mcg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Selenium, Se (mcg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin A, IU (IU)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin K (phylloquinone) (mcg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin C, total ascorbic acid (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Vitamin D (IU)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Cholesterol (mg)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Fiber, total dietary (g)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "Carbohydrate, by difference (g)",
+                      type: types["Number"],
+                      scale: d3.scaleSqrt().range([innerHeight, 0])
+                    },
+                    {
+                      key: "manufac_name",
+                      description: "Manufacturer", 
+                      type: types["String"],
+                      axis: d3.axisRight()
+                        .tickFormat(function(d,i) {
+                          if (d == null) return "(null)";
+                          return i % 5 == 0 ? d.slice(0,22) : "";
+                        })
+                    }
+                  ];
 
-                      // Extract the list of dimensions and create a scale for each.
-                      x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
-                        return d != "name" && (y[d] = d3.scale.linear()
-                            .domain(d3.extent(cars, function(p) { return +p[d]; }))
-                            .range([height, 0]));
-                      }));
+                  var xscale = d3.scalePoint()
+                      .domain(d3.range(dimensions.length))
+                      .range([0, width]);
 
-                      // Add grey background lines for context.
-                      background = svg.append("g")
-                          .attr("class", "background")
-                        .selectAll("path")
-                          .data(cars)
-                        .enter().append("path")
-                          .attr("d", path);
+                  var yAxis = d3.axisLeft();
 
-                      // Add blue foreground lines for focus.
-                      foreground = svg.append("g")
-                          .attr("class", "foreground")
-                        .selectAll("path")
-                          .data(cars)
-                        .enter().append("path")
-                          .attr("d", path);
+                  var container = d3.select("#vis-container").append("div")
+                      .attr("class", "parcoords")
+                      .style("width", width + margin.left + margin.right + "px")
+                      .style("height", height + margin.top + margin.bottom + "px");
 
-                      // Add a group element for each dimension.
-                      var g = svg.selectAll(".dimension")
-                          .data(dimensions)
-                        .enter().append("g")
-                          .attr("class", "dimension")
-                          .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
-                          .call(d3.behavior.drag()
-                            .origin(function(d) { return {x: x(d)}; })
-                            .on("dragstart", function(d) {
-                              dragging[d] = x(d);
-                              background.attr("visibility", "hidden");
-                            })
-                            .on("drag", function(d) {
-                              dragging[d] = Math.min(width, Math.max(0, d3.event.x));
-                              foreground.attr("d", path);
-                              dimensions.sort(function(a, b) { return position(a) - position(b); });
-                              x.domain(dimensions);
-                              g.attr("transform", function(d) { return "translate(" + position(d) + ")"; })
-                            })
-                            .on("dragend", function(d) {
-                              delete dragging[d];
-                              transition(d3.select(this)).attr("transform", "translate(" + x(d) + ")");
-                              transition(foreground).attr("d", path);
-                              background
-                                  .attr("d", path)
-                                .transition()
-                                  .delay(500)
-                                  .duration(0)
-                                  .attr("visibility", null);
-                            }));
+                  var svg = container.append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                      // Add an axis and title.
-                      g.append("g")
-                          .attr("class", "axis")
-                          .each(function(d) { d3.select(this).call(axis.scale(y[d])); })
-                        .append("text")
-                          .style("text-anchor", "middle")
-                          .attr("y", -9)
-                          .text(function(d) { return d; });
+                  var canvas = container.append("canvas")
+                      .attr("width", width * devicePixelRatio)
+                      .attr("height", height * devicePixelRatio)
+                      .style("width", width + "px")
+                      .style("height", height + "px")
+                      .style("margin-top", margin.top + "px")
+                      .style("margin-left", margin.left + "px");
 
-                      // Add and store a brush for each axis.
-                      g.append("g")
-                          .attr("class", "brush")
-                          .each(function(d) {
-                            d3.select(this).call(y[d].brush = d3.svg.brush().y(y[d]).on("brushstart", brushstart).on("brush", brush));
-                          })
-                        .selectAll("rect")
-                          .attr("x", -8)
-                          .attr("width", 16);
+                  var ctx = canvas.node().getContext("2d");
+                  ctx.globalCompositeOperation = 'darken';
+                  ctx.globalAlpha = 0.15;
+                  ctx.lineWidth = 1.5;
+                  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+                  var output = d3.select("#vis-container").append("pre");
+
+                  var axes = svg.selectAll(".axis")
+                      .data(dimensions)
+                    .enter().append("g")
+                      .attr("class", function(d) { return "axis " + d.key.replace(/ /g, "_"); })
+                      .attr("transform", function(d,i) { return "translate(" + xscale(i) + ")"; });
+
+                  // data is stored as a literal string of CSVs with newlines represented as \n and apostrophes escaped as \'
+                  var data = 'id,food_group_id,long_desc,short_desc,common_names,manufac_name,survey,ref_desc,refuse,sci_name,nitrogen_factor,protein_factor,fat_factor,calorie_factor,food_group,Protein (g),Total lipid (fat) (g),"Carbohydrate, by difference (g)",Energy (kcal),"Sugars, total (g)","Fiber, total dietary (g)","Calcium, Ca (mg)","Iron, Fe (mg)","Magnesium, Mg (mg)","Phosphorus, P (mg)","Potassium, K (mg)","Sodium, Na (mg)","Zinc, Zn (mg)","Selenium, Se (mcg)","Vitamin A, IU (IU)",Vitamin D (IU),"Vitamin C, total ascorbic acid (mg)",Thiamin (mg),Riboflavin (mg),Niacin (mg),Vitamin B-6 (mg),Vitamin B-12 (mcg),Vitamin K (phylloquinone) (mcg),Folic acid (mcg),Cholesterol (mg)\n3293,300,"Babyfood, plums, bananas and rice, strained","BABYFOOD,PLUMS,BANANAS&RICE,STR",,,Y,,0,,,,,,Baby Foods,1.1,0.3,12.7,57,9.3,1.3,3,0,11,32,265,0,0.13,2.4,133,0,12.3,0.04,0.05,0.8,0.13,0,5.7,0,0\n6468,600,"Soup, vegetarian vegetable, canned, prepared with equal volume water","SOUP,VEGETARIAN VEG,CND,PREP W/ EQ VOLUME H2O",,,Y,,0,,6.25,2.5,8.5,4,"Soups, Sauces, and Gravies",0.86,0.79,4.89,28,1.57,0.3,10,0.44,3,14,86,338,0.19,1.8,1421,0,0.6,0.022,0.019,0.374,0.023,0,2.1,0,0\n9520,900,"Kiwifruit, ZESPRI SunGold, raw","KIWIFRUIT,ZESPRI SUNGOLD,RAW",Gold3,,,Skin,28,Actinidia chinensis �Zesy002� (Gold3),,3.36,8.37,3.6,Fruits and Fruit Juices,1.02,0.28,15.79,63,12.3,1.4,17,0.21,12,25,315,3,0.08,0.4,23,0,161.3,0,0.074,0.231,0.079,0.08,6.1,0,0\n11855,1100,"Spinach, canned, no salt added, solids and liquids","SPINACH,CND,NO SALT,SOL&LIQUIDS",,,,,0,,6.25,2.44,8.37,3.57,Vegetables and Vegetable Products,2.11,0.37,2.92,19,0.33,2.2,83,1.58,56,32,230,75,0.42,1.2,8084,0,13.5,0.018,0.106,0.271,0.08,0,380.8,0,0\n14649,1400,"Beverages, tea, hibiscus, brewed","BEVERAGES,TEA,HIBISCUS,BREWED",,,Y,,0,,,,,,Beverages,0,0,0,0,0,0,8,0.08,3,1,20,4,0.04,0,0,0,0,0,0,0.04,0,0,0,0,0\n18036,1800,"Bread, multi-grain, toasted (includes whole-grain)","BREAD,MULTI-GRAIN,TSTD (INCLUDES WHOLE-GRAIN)",,,Y,,0,,,,,,Baked Products,14.52,4.6,47.11,288,6.94,8.1,111,2.72,85,247,250,414,1.85,35.8,0,0,0.1,0.243,0.142,4.394,0.286,0,1.5,0,0\n20140,2000,"Spelt, uncooked","SPELT,UNCKD",,,,,0,Triticum aestivum L. subsp. spelta,5.83,3.59,8.37,3.78,Cereal Grains and Pasta,14.57,2.43,70.19,338,6.82,10.7,27,4.44,136,401,388,8,3.28,11.7,10,,0,0.364,0.113,6.843,0.23,0,3.6,0,0\n27068,600,"Dip, FRITO\'S, bean, original flavor","DIP,FRITO\'S,BEAN,ORIGINAL FLAVOR",,Pepsi-Cola North America,,,0,,,,,,"Soups, Sauces, and Gravies",5.44,3.7,15.89,119,0.99,4.9,26,1.6,40,105,368,443,0.69,7.7,,,,0.09,0.1,0.43,0.115,,,,\n43572,2500,"Popcorn, microwave, low fat and sodium","POPCORN,MICROWAVE,LOFAT&NA",,,,,0,,,,,,Snacks,12.6,9.5,73.39,429,0.54,14.2,11,2.28,151,264,241,490,3.83,8.6,147,0,0,0.35,0.11,2.07,0.17,0,15.7,0,0';
+                  // d3's csvParse parses the literal CSV-string into an array of data
+                  var nutrients = d3.csvParse(data);
+                  // pass the array of nutrients-data to closure that invokes the following unnamed function-expression
+                  (function(data) {
+                    // shuffle the data!
+                    data = d3.shuffle(data);
+
+                    data.forEach(function(d) {
+                      dimensions.forEach(function(p) {
+                        d[p.key] = !d[p.key] ? null : p.type.coerce(d[p.key]);
+                      });
+
+                      // truncate long text strings to fit in data table
+                      for (var key in d) {
+                        if (d[key] && d[key].length > 35) d[key] = d[key].slice(0,36);
+                      }
                     });
 
-                    function position(d) {
-                      var v = dragging[d];
-                      return v == null ? x(d) : v;
-                    }
+                    // type/dimension default setting happens here
+                    dimensions.forEach(function(dim) {
+                      if (!("domain" in dim)) {
+                        // detect domain using dimension type's extent function
+                        dim.domain = d3_functor(dim.type.extent)(data.map(function(d) { return d[dim.key]; }));
+                      }
+                      if (!("scale" in dim)) {
+                        // use type's default scale for dimension
+                        dim.scale = dim.type.defaultScale.copy();
+                      }
+                      dim.scale.domain(dim.domain);
+                    });
 
-                    function transition(g) {
-                      return g.transition().duration(500);
-                    }
+                    var render = renderQueue(draw).rate(50);
 
-                    // Returns the path for a given data point.
-                    function path(d) {
-                      return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
+                    ctx.clearRect(0,0,width,height);
+                    ctx.globalAlpha = d3.min([0.85/Math.pow(data.length,0.3),1]);
+                    render(data);
+
+                    axes.append("g")
+                        .each(function(d) {
+                          var renderAxis = "axis" in d
+                            ? d.axis.scale(d.scale)  // custom axis
+                            : yAxis.scale(d.scale);  // default axis
+                          d3.select(this).call(renderAxis);
+                        })
+                      .append("text")
+                        .attr("class", "title")
+                        .attr("text-anchor", "start")
+                        .text(function(d) { return "description" in d ? d.description : d.key; });
+
+                    // Add and store a brush for each axis.
+                    axes.append("g")
+                        .attr("class", "brush")
+                        .each(function(d) {
+                          d3.select(this).call(d.brush = d3.brushY()
+                            .extent([[-10,0], [10,height]])
+                            .on("start", brushstart)
+                            .on("brush", brush)
+                            .on("end", brush)
+                          )
+                        })
+                      .selectAll("rect")
+                        .attr("x", -8)
+                        .attr("width", 16);
+
+                    d3.selectAll(".axis.food_group .tick text")
+                      .style("fill", color);
+                      
+                    output.text(d3.tsvFormat(data.slice(0,24)));
+
+                    function project(d) {
+                      return dimensions.map(function(p,i) {
+                        // check if data element has property and contains a value
+                        if (
+                          !(p.key in d) ||
+                          d[p.key] === null
+                        ) return null;
+
+                        return [xscale(i),p.scale(d[p.key])];
+                      });
+                    };
+
+                    function draw(d) {
+                      ctx.strokeStyle = color(d.food_group);
+                      ctx.beginPath();
+                      var coords = project(d);
+                      coords.forEach(function(p,i) {
+                        // this tricky bit avoids rendering null values as 0
+                        if (p === null) {
+                          // this bit renders horizontal lines on the previous/next
+                          // dimensions, so that sandwiched null values are visible
+                          if (i > 0) {
+                            var prev = coords[i-1];
+                            if (prev !== null) {
+                              ctx.moveTo(prev[0],prev[1]);
+                              ctx.lineTo(prev[0]+6,prev[1]);
+                            }
+                          }
+                          if (i < coords.length-1) {
+                            var next = coords[i+1];
+                            if (next !== null) {
+                              ctx.moveTo(next[0]-6,next[1]);
+                            }
+                          }
+                          return;
+                        }
+                        
+                        if (i == 0) {
+                          ctx.moveTo(p[0],p[1]);
+                          return;
+                        }
+
+                        ctx.lineTo(p[0],p[1]);
+                      });
+                      ctx.stroke();
                     }
 
                     function brushstart() {
@@ -483,14 +675,41 @@
 
                     // Handles a brush event, toggling the display of foreground lines.
                     function brush() {
-                      var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
-                          extents = actives.map(function(p) { return y[p].brush.extent(); });
-                      foreground.style("display", function(d) {
-                        return actives.every(function(p, i) {
-                          return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-                        }) ? null : "none";
+                      render.invalidate();
+
+                      var actives = [];
+                      svg.selectAll(".axis .brush")
+                        .filter(function(d) {
+                          return d3.brushSelection(this);
+                        })
+                        .each(function(d) {
+                          actives.push({
+                            dimension: d,
+                            extent: d3.brushSelection(this)
+                          });
+                        });
+
+                      var selected = data.filter(function(d) {
+                        if (actives.every(function(active) {
+                            var dim = active.dimension;
+                            // test if point is within extents for each active brush
+                            return dim.type.within(d[dim.key], active.extent, dim);
+                          })) {
+                          return true;
+                        }
                       });
+
+                      ctx.clearRect(0,0,width,height);
+                      ctx.globalAlpha = d3.min([0.85/Math.pow(selected.length,0.3),1]);
+                      render(selected);
+
+                      output.text(d3.tsvFormat(selected.slice(0,24)));
                     }
+                  })(nutrients);
+
+                  function d3_functor(v) {
+                    return typeof v === "function" ? v : function() { return v; };
+                  };
                 }
             }
         </script>
